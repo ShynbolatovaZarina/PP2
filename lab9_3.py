@@ -1,6 +1,6 @@
 import pygame
 import sys
-from pygame.locals import * 
+from pygame.locals import *
 
 pygame.init()
 
@@ -15,19 +15,19 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
-pygame.display.set_caption("Paint v1.0 Simplifed")
+pygame.display.set_caption("Paint v2.0 with Eraser")
 clock = pygame.time.Clock()
 
 
 def draw_line(surface, start_pos, end_pos, color, width):
-        if start_pos and end_pos:
-            pygame.draw.line(surface, color, start_pos, end_pos, width)
-            pygame.draw.circle(surface, color, end_pos, width // 2)
+    if start_pos and end_pos:
+        pygame.draw.line(surface, color, start_pos, end_pos, width)
+        pygame.draw.circle(surface, color, end_pos, width // 2)
 
 
 shapes = []       
 current_color = BLUE    
-brush_radius = 5        
+brush_radius = 3        
 tool = 'brush'          
 
 drawing_shape = False  
@@ -40,7 +40,6 @@ canvas.fill(BLACK)
 
 running = True
 while running:
-    
     current_pos = pygame.mouse.get_pos()
     mouse_buttons = pygame.mouse.get_pressed()
     
@@ -57,11 +56,13 @@ while running:
             elif event.key == K_2: tool = 'circle'
             elif event.key == K_3: tool = 'eraser'
             elif event.key == K_4: tool = 'picker'
-            elif event.key == K_c: canvas.fill(BLACK)
+            elif event.key == K_c: 
+                canvas.fill(BLACK)
+                shapes.clear()
             
             elif event.key == K_r: current_color = RED
             elif event.key == K_g: current_color = GREEN
-            elif event.key == K_l: current_color = BLUE 
+            elif event.key == K_l: current_color = BLUE
             elif event.key == K_w: current_color = WHITE 
 
             elif event.key == K_5: tool = 'square'
@@ -83,7 +84,7 @@ while running:
 
             elif event.button == 3:  
                 brush_radius = max(1, brush_radius + 2)
-        
+
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 if drawing_shape and shape_start:
@@ -116,15 +117,19 @@ while running:
                 last_pos = None 
 
         if event.type == MOUSEMOTION:
-            if mouse_buttons[0] and tool in ('brush', 'eraser'):
-                color = current_color
-                if tool == 'eraser':
-                    color = BLACK 
+            if mouse_buttons[0]:
+                if tool in ('brush', 'eraser'):
+                    color = current_color
+                    if tool == 'eraser':
+                        shapes = [
+                            (t, r, c) for (t, r, c) in shapes
+                            if not pygame.Rect(r).collidepoint(current_pos)
+                        ]
+                        color = BLACK
                     
-                draw_line(canvas, last_pos, current_pos, color, brush_radius * 2)
-                last_pos = current_pos
+                    draw_line(canvas, last_pos, current_pos, color, brush_radius * 2)
+                    last_pos = current_pos
             
-    
     screen.blit(canvas, (0, 0))
 
     for type, rect_data, color in shapes:
@@ -175,7 +180,7 @@ while running:
             pygame.draw.polygon(screen, current_color, points, 2)
             
     pygame.display.flip()
-    clock.tick(660)
+    clock.tick(60)
 
 pygame.quit()
 sys.exit()
